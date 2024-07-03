@@ -1,0 +1,35 @@
+- hosts: localhost
+  connection: local
+  tasks:
+   
+    - name: Creating LXD container
+      lxd_container:
+        name: "{{ item }}"
+        state: started
+        cert_file: /etc/ssl/certs/ca-certificates.crt
+        config:
+          limits.cpu: "2"
+          limits.memory: 4GB
+          limits.memory.swap: "false"
+          linux.kernel_modules: ip_tables,ip6_tables,netlink_diag,nf_nat,overlay
+          raw.lxc: "lxc.apparmor.profile=unconfined\nlxc.cap.drop= \nlxc.cgroup.devices.allow=a\nlxc.mount.auto=proc:rw sys:rw"
+          security.nesting: "true"
+          security.privileged: "true"
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          protocol: lxd
+          alias: ubuntu/bionic/amd64
+          cert_file: /etc/ssl/certs/ca-certificates.crt
+        profiles: ["default"]
+        wait_for_ipv4_addresses: true
+        timeout: 600
+      with_items:
+        - k8s-loadbalancer
+        - k8s-master1
+        - k8s-master2
+        - k8s-master3
+        - k8s-worker1
+        - k8s-worker2
+        - k8s-worker3

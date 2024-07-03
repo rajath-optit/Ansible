@@ -1,0 +1,10 @@
+- hosts: localhost
+  tasks:
+  - name: Register Keyword Demo
+    shell: "find *.txt"
+    args:
+      chdir: "/tmp/dirforexample/"
+    register: find_output
+
+  - debug:
+      var: find_output

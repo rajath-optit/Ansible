@@ -1,0 +1,13 @@
+- hosts: localhost
+  vars:
+     env: dev
+  tasks:
+   - name: Demo For Method 1 - Ignore Error
+     get_url:
+       url: http://thissitedoesntexists
+     ignore_errors: yes
+
+   - name: Executing After Error - Ignore Error
+     debug:
+         msg: "ignoreErrorExample This is working after error "
+

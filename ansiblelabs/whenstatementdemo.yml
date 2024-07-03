@@ -1,0 +1,16 @@
+- hosts: localhost
+  vars:
+     env: dev
+  tasks:
+   - name: Checking for Ubuntu system type and creating a file if its true
+     file:
+      path: /tmp/UbuntuDistribution
+      state: touch
+     when: ansible_distribution =="Ubuntu"
+
+   - name: Checking for Centos system type and creating a file if its true
+     file:
+       path: /tmp/Centos
+       state: touch
+     when: ansible_distribution =="Centos"
+
