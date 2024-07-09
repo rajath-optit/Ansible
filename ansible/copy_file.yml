@@ -1,0 +1,9 @@
+---
+- name: Copy a file from Ansible server to target server
+  hosts: target_servers
+  tasks:
+    - name: Copy a file
+      copy:
+        src: /etc/ansible/example.txt  # Full absolute path to the file
+        dest: /home/optit/destination_file.txt  # Path on the target server
+        remote_src: yes  # Look for the file on the remote server

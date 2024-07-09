@@ -1,0 +1,6 @@
+---
+- name: Execute echo command on target server
+  hosts: target_servers
+  tasks:
+    - name: Execute echo command
+      command: echo "Hello from Ansible"

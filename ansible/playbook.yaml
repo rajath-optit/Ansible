@@ -1,0 +1,6 @@
+---
+- hosts: test-vms
+  tasks:
+    - name: "This is a test task"
+      command: /bin/hostname
+
