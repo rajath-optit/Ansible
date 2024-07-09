@@ -1,0 +1,13 @@
+- hosts: localhost
+  vars:
+     env: dev
+  tasks:
+   - name:  Loop Demo
+     file:
+      path: /tmp/{{item}}
+      state: touch
+     with_items:
+         - config1.j2
+         - config2.j2
+         - config3.j2
+

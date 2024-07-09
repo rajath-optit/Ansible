@@ -1,0 +1,12 @@
+  - name: Dispay variable
+    debug:
+      msg: "Task 1 is Executing"
+    tags:
+       - task1
+
+  - name: Dispay variable
+    debug:
+      msg: "Task 2 is Executing"
+    tags:
+       - task2
+

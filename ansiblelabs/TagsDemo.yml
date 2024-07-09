@@ -1,0 +1,24 @@
+- hosts: localhost
+  vars:
+     env: dev
+  gather_facts: True
+  tasks:
+
+  - name: Conncetion  variable
+    debug:
+      msg: "{{env}}"
+    tags:
+       - always
+
+
+  - name: Dispay variable
+    debug:
+      msg: "{{env}}"
+    tags: 
+       - task1
+
+  - name: print out operating system
+    debug: var=ansible_distribution
+    tags: 
+      - task2
+

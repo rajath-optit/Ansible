@@ -1,0 +1,14 @@
+- hosts: localhost
+  vars:
+     env: dev
+  gather_facts: True
+  tasks:
+
+  - name: Dispay variable
+    debug:
+      msg: "{{env}}"
+    
+
+  - name: print out operating system
+    debug: var=ansible_distribution
+
