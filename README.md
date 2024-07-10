@@ -1,292 +1,114 @@
-## **Guide to Install and Set Up Ansible on Ubuntu**
+starting with the Ansible setup and installation, followed by examples from the lab directory, and concluding with connecting Ansible to Jenkins and testing the build.
 
-### 1. **Update Your System**
+---
 
-First, ensure your system packages are up-to-date:
+# **Ansible Setup and Usage Guide**
 
-```bash
+## **Table of Contents**
+1. [Ansible Setup and Installation](#ansible-setup-and-installation)
+2. [Lab Exercises](#lab-exercises)
+    - [1. Variable Demonstration](#1-variable-demonstration)
+    - [2. Variables and Facts](#2-variables-and-facts)
+    - [3. Tags Demo](#3-tags-demo)
+    - [4. Loop with Items Demo](#4-loop-with-items-demo)
+    - [5. Nested Loop Demo 1](#5-nested-loop-demo-1)
+    - [6. Nested Loop Demo 2](#6-nested-loop-demo-2)
+    - [7. Register Keyword Demo](#7-register-keyword-demo)
+    - [8. Conditional Tasks](#8-conditional-tasks)
+    - [9. Disk Space Checker](#9-disk-space-checker)
+3. [Connecting Ansible to Jenkins and Testing Build](#connecting-ansible-to-jenkins-and-testing-build)
+
+---
+## **Ansible Setup and Installation**
+
+### **Step 1: Install Ansible**
+
+#### **For Ubuntu/Debian:**
+```sh
 sudo apt update
-sudo apt upgrade
+sudo apt install ansible -y
 ```
 
-### 2. **Install Ansible**
-
-You can install Ansible from the official Ubuntu repository:
-
-```bash
-sudo apt install ansible
+#### **For CentOS/RHEL:**
+```sh
+sudo yum install epel-release -y
+sudo yum install ansible -y
 ```
 
-To verify that Ansible is installed correctly, run:
-
-```bash
+### **Step 2: Verify Installation**
+```sh
 ansible --version
 ```
 
-You should see output indicating the Ansible version.
+### **Step 3: Set Up Ansible for Non-Sudo User on Ubuntu**
 
-### 3. **Basic Configuration**
+To allow a non-sudo user to use Ansible without requiring sudo privileges, you can add the user to the Ansible configuration. Follow these steps:
 
-Ansible’s main configuration file is located at `/etc/ansible/ansible.cfg`. You can modify this file to set global configurations.
+1. **Create a Configuration Directory** (if it doesn't exist):
+    ```sh
+    mkdir -p ~/.ansible
+    ```
 
-To edit the configuration file:
+2. **Create or Edit the Ansible Configuration File**:
+    Create a file named `ansible.cfg` in the `~/.ansible` directory:
+    ```sh
+    nano ~/.ansible/ansible.cfg
+    ```
 
-```bash
-sudo nano /etc/ansible/ansible.cfg
+3. **Add Configuration to ansible.cfg**:
+    Add the following configuration to allow the non-sudo user to run Ansible playbooks:
+    ```ini
+    [defaults]
+    inventory = ~/.ansible/hosts
+
+    [privilege_escalation]
+    become = True
+    become_method = sudo
+    become_user = root
+    ```
+
+4. **Create an Inventory File**:
+    Create a file named `hosts` in the `~/.ansible` directory:
+    ```sh
+    nano ~/.ansible/hosts
+    ```
+
+5. **Add Localhost to Inventory**:
+    Add the following line to the `hosts` file to include the localhost in the inventory:
+    ```ini
+    localhost ansible_connection=local
+    ```
+
+6. **Ensure Permissions**:
+    Ensure that the `ansible.cfg` and `hosts` files are readable by your user:
+    ```sh
+    chmod 644 ~/.ansible/ansible.cfg
+    chmod 644 ~/.ansible/hosts
+    ```
+
+7. **Test Ansible Configuration**:
+    Run a simple Ansible command to ensure everything is set up correctly:
+    ```sh
+    ansible all -m ping
+    ```
+
+#### Expected Output:
+```sh
+localhost | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
 ```
 
-**Common Configuration Settings:**
-
-```ini
-[defaults]
-# Set the path to your inventory file
-inventory = /etc/ansible/hosts
-
-# Define the default SSH user for remote connections
-remote_user = your_username
-
-# Specify the default module path
-library = /usr/share/ansible/plugins/modules
-
-# Control SSH connection settings
-host_key_checking = False
-
-# Set the default timeout for remote connections
-timeout = 10
-```
-
-### 4. **Create an Inventory File**
-
-The inventory file specifies the hosts where Ansible will run commands. The default location is `/etc/ansible/hosts`.
-
-**To edit the inventory file:**
-
-```bash
-sudo nano /etc/ansible/hosts
-```
-
-**Example Inventory File:**
-
-```ini
-# Local host
-localhost ansible_connection=local
-
-# Remote hosts
-[webservers]
-web1.example.com
-web2.example.com
-
-[dbservers]
-db1.example.com
-```
-
-### 5. **Test Connectivity**
-
-Ensure you can connect to the hosts defined in the inventory file:
-
-```bash
-ansible all -m ping
-```
-
-This command uses the `ping` module to test connectivity to all hosts.
-
-### 6. **Write Your First Playbook**
-
-Create a new YAML file for your playbook. For example, `my_playbook.yml`:
-
-```yaml
----
-- name: Ensure a package is installed
-  hosts: webservers
-  become: yes  # Escalate to sudo privileges
-  tasks:
-    - name: Install nginx
-      apt:
-        name: nginx
-        state: present
-```
-
-**Run the Playbook:**
-
-```bash
-ansible-playbook my_playbook.yml
-```
-
-### 7. **Create a Simple Role**
-
-Roles help organize playbooks into reusable components.
-
-**Create the Role Structure:**
-
-```bash
-ansible-galaxy init my_role
-```
-
-**Role Directory Structure:**
-
-```
-my_role/
-├── defaults
-│   └── main.yml
-├── files
-├── handlers
-│   └── main.yml
-├── meta
-│   └── main.yml
-├── tasks
-│   └── main.yml
-├── templates
-├── tests
-│   ├── inventory
-│   └── test.yml
-└── vars
-    └── main.yml
-```
-
-**Edit the `tasks/main.yml` File:**
-
-```yaml
----
-- name: Ensure a package is installed
-  apt:
-    name: "{{ package_name }}"
-    state: present
-```
-
-**Use the Role in a Playbook:**
-
-```yaml
----
-- name: Use my_role
-  hosts: webservers
-  become: yes
-  roles:
-    - my_role
-```
-
-### 8. **Advanced Configuration**
-
-For advanced usage, you might want to explore these topics:
-
-- **Ansible Vault**: Encrypt sensitive data.
-  ```bash
-  ansible-vault create secret.yml
-  ansible-vault edit secret.yml
-  ansible-vault view secret.yml
-  ```
-
-- **Ansible Collections**: Manage and share content.
-  ```bash
-  ansible-galaxy collection install community.general
-  ```
-
-- **Dynamic Inventory**: Integrate with cloud providers to manage hosts dynamically.
-
-### 9. **Common Commands**
-
-Here are some frequently used Ansible commands:
-
-- **List All Hosts:**
-
-  ```bash
-  ansible all --list-hosts
-  ```
-
-- **Check Syntax of a Playbook:**
-
-  ```bash
-  ansible-playbook my_playbook.yml --syntax-check
-  ```
-
-- **View Detailed Output of a Playbook:**
-
-  ```bash
-  ansible-playbook my_playbook.yml -v
-  ```
-
-- **Limit Execution to Specific Hosts or Groups:**
-
-  ```bash
-  ansible-playbook my_playbook.yml -l webservers
-  ```
-
-- **Run Playbook with a Specific Inventory File:**
-
-  ```bash
-  ansible-playbook -i my_inventory_file my_playbook.yml
-  ```
-
-### 10. **Example Playbooks**
-
-Here are a few more example playbooks for different tasks:
-
-**Example 1: Installing a Package**
-
-```yaml
----
-- name: Install Apache HTTP Server
-  hosts: webservers
-  become: yes
-  tasks:
-    - name: Install Apache
-      apt:
-        name: apache2
-        state: present
-```
-
-**Example 2: Copying Files**
-
-```yaml
----
-- name: Copy Files to Remote Hosts
-  hosts: webservers
-  become: yes
-  tasks:
-    - name: Copy a file to the remote host
-      copy:
-        src: /path/to/local/file
-        dest: /path/to/remote/destination
-```
-
-**Example 3: Managing Services**
-
-```yaml
----
-- name: Manage a Service
-  hosts: webservers
-  become: yes
-  tasks:
-    - name: Ensure Apache is started
-      service:
-        name: apache2
-        state: started
-        enabled: yes
-```
-
-### 11. **Resources and Documentation**
-
-- **[Ansible Documentation](https://docs.ansible.com/ansible/latest/index.html)**: Official documentation for all Ansible features.
-- **[Ansible GitHub Repository](https://github.com/ansible/ansible)**: Source code and issue tracker.
-- **[Ansible Galaxy](https://galaxy.ansible.com/)**: Community roles and collections.
-
-### 12. **Troubleshooting Tips**
-
-- **Check Configuration File**: Ensure there are no syntax errors in `ansible.cfg`.
-- **Verify Hosts**: Make sure the hosts in the inventory file are reachable.
-- **Inspect Errors**: Review error messages for hints about what went wrong.
+By following these steps, you can configure Ansible to be used by a non-sudo user on an Ubuntu system without affecting the local machine or requiring a virtual environment.
 
 ---
 
-This guide should help you get started with Ansible on Ubuntu. You can adapt the instructions to fit your specific needs and expand your Ansible knowledge as you explore more advanced features.
+## **Lab Exercises**
 
-### Additional Resources
+### **1. Variable Demonstration**
 
-- **[Ansible Tutorial for Beginners](https://www.redhat.com/en/topics/ansible/learn)**: A great starting point for new users.
-- **[Ansible Best Practices](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html)**: Best practices for writing and organizing your Ansible playbooks.
-
-# [Labs]
-
-### 1. `1_labexercise_variables.yml`
+**File: `1_labexercise_variables.yml`**
 
 ```yaml
 # This playbook demonstrates how to define and use variables in Ansible.
@@ -294,12 +116,15 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
   vars:
      env: dev  # Define a variable 'env' with the value 'dev'
   tasks:
-  - name: Dispay variable  # Display the value of the 'env' variable
+  - name: Display variable
     debug:
-      msg: "{{env}}"  # The 'debug' module prints the value of 'env'
+      msg: "{{env}}"
 ```
 
-### 2. `2_labexercise_variables.yml`
+
+### **2. Variables and Facts**
+
+**File: `2_labexercise_variables.yml`**
 
 ```yaml
 # This playbook demonstrates how to use variables and gather facts in Ansible.
@@ -308,15 +133,18 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
      env: dev  # Define a variable 'env' with the value 'dev'
   gather_facts: True  # Gather facts about the system, e.g., OS distribution
   tasks:
-  - name: Dispay variable  # Display the value of the 'env' variable
+  - name: Display variable
     debug:
-      msg: "{{env}}"  # The 'debug' module prints the value of 'env'
+      msg: "{{env}}"
     
-  - name: print out operating system  # Print out the operating system distribution
-    debug: var=ansible_distribution  # The 'debug' module prints the fact 'ansible_distribution'
+  - name: Print out operating system
+    debug:
+      var: ansible_distribution
 ```
 
-### 3. `3_labexcercise_TagsDemo.yml`
+### **3. Tags Demo**
+
+**File: `3_labexercise_tagsdemo.yml`**
 
 ```yaml
 # This playbook demonstrates the use of tags to run specific tasks.
@@ -325,25 +153,28 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
      env: dev  # Define a variable 'env' with the value 'dev'
   gather_facts: True  # Gather facts about the system
   tasks:
-  - name: Conncetion  variable  # Display the value of the 'env' variable (Tag: task1)
+  - name: Display variable (Tag: task1)
     debug:
       msg: "{{env}}"
     tags:
-       - task1  # Tag this task as 'task1'
+       - task1
 
-  - name: Dispay variable  # Display the value of the 'env' variable (Tag: task2)
+  - name: Display variable (Tag: task2)
     debug:
       msg: "{{env}}"
     tags: 
-       - task2  # Tag this task as 'task2'
+       - task2
 
-  - name: print out operating system  # Print out the operating system distribution (Tag: task3)
-    debug: var=ansible_distribution
+  - name: Print out operating system (Tag: task3)
+    debug:
+      var: ansible_distribution
     tags: 
-      - task3  # Tag this task as 'task3'
+      - task3
 ```
 
-### 4. `4_labexcercise_loop_withitemloopdemo.yml`
+### **4. Loop with Items Demo**
+
+**File: `4_labexercise_loop_withitemloopdemo.yml`**
 
 ```yaml
 # This playbook demonstrates how to use a loop with the 'with_items' directive.
@@ -351,17 +182,19 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
   vars:
      env: dev  # Define a variable 'env' with the value 'dev'
   tasks:
-   - name:  Loop Demo  # Create multiple files based on the list of items
+   - name: Loop Demo
      file:
-      path: /tmp/{{item}}  # Path to the file to be created, using the item from the list
-      state: touch  # Ensure the file is created
+      path: /tmp/{{item}}
+      state: touch
      with_items:
-         - config1.j2  # Item 1
-         - config2.j2  # Item 2
-         - config3.j2  # Item 3
+         - config1.j2
+         - config2.j2
+         - config3.j2
 ```
 
-### 5. `5_labexcercise_loop_withnestedloopdemo1.yml`
+### **5. Nested Loop Demo 1**
+
+**File: `5_labexercise_loop_withnestedloopdemo1.yml`**
 
 ```yaml
 # This playbook demonstrates how to use a nested loop with the 'with_nested' directive.
@@ -369,16 +202,18 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
   vars:
     env: dev  # Define a variable 'env' with the value 'dev'
   tasks:
-    - name: Loop Demo with nested  # Create multiple files based on nested lists
+    - name: Loop Demo with nested
       file:
-        path: "/tmp/{{ item[0] }}-{{ item[1] }}"  # Path combining items from both lists
-        state: touch  # Ensure the file is created
+        path: "/tmp/{{ item[0] }}-{{ item[1] }}"
+        state: touch
       with_nested:
-        - [ 'config1.j2', 'config2.j2', 'config3.j2' ]  # List of config files
-        - [ 'file1', 'file2', 'file3' ]  # List of file names
+        - [ 'config1.j2', 'config2.j2', 'config3.j2' ]
+        - [ 'file1', 'file2', 'file3' ]
 ```
 
-### 6. `6_labexcercise_loop_withnestedloopdemo.yml`
+### **6. Nested Loop Demo 2**
+
+**File: `6_labexercise_loop_withnestedloopdemo.yml`**
 
 ```yaml
 # This playbook demonstrates a nested loop to display combinations of two lists.
@@ -386,31 +221,36 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
   vars:
      env: dev  # Define a variable 'env' with the value 'dev'
   tasks:
-   - name: Nested Loop Demo  # Display combinations of two lists
+   - name: Nested Loop Demo
      debug:
-         msg: "{{item[0]}}-{{item[1]}}"  # Print the combination of items from both lists
+         msg: "{{item[0]}}-{{item[1]}}"
      with_nested:
-      - [ 'Section-1', 'Section-2' ]  # List of sections
-      - [ 'Part-I', 'Part-II', 'Part-III' ]  # List of parts
+      - [ 'Section-1', 'Section-2' ]
+      - [ 'Part-I', 'Part-II', 'Part-III' ]
 ```
 
-### 7. `7_labexcercise_registerkeywords_registerkeyworddemo.yml`
+### **7. Register Keyword Demo**
+
+**File: `7_labexercise_registerkeywords_registerkeyworddemo.yml`**
 
 ```yaml
 # This playbook demonstrates how to use the 'register' keyword to store the result of a task.
 - hosts: localhost
   tasks:
-  - name: Register Keyword Demo  # Find all .txt files in a specific directory
+  - name: Register Keyword Demo
     shell: "find *.txt"
     args:
-      chdir: "/tmp/dirforexample/"  # Change to the directory for the 'find' command
-    register: find_output  # Register the output of the 'find' command to 'find_output'
+      chdir: "/tmp/dirforexample/"
+    register: find_output
 
-  - debug:
-      var: find_output  # Display the content of 'find_output' variable
+  - name: Show output
+    debug:
+      var: find_output
 ```
 
-### 8. `8_labexcercise_when_whenstatementdemo.yml`
+### **8. Conditional Tasks**
+
+**File: `8_labexercise_when_whenstatementdemo.yml`**
 
 ```yaml
 # This playbook demonstrates how to use the 'when' statement for conditional tasks.
@@ -418,22 +258,25 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
   vars:
      env: dev  # Define a variable 'env' with the value 'dev'
   tasks:
-   - name: Checking for Ubuntu system type and creating a file if its true  # Create a file if the OS is Ubuntu
+   - name: Checking for Ubuntu system type and creating a file if true
      file:
       path: /tmp/UbuntuDistribution
-      state: touch  # Ensure the file is created
-     when: ansible_distribution =="Ubuntu"  # Condition to check if the OS is Ubuntu
+      state: touch
+     when: ansible_distribution == "Ubuntu"
 
-   - name: Checking for Centos system type and creating a file if its true  # Create a file if the OS is CentOS
+   - name: Checking for CentOS system type and creating a file if true
      file:
        path: /tmp/Centos
-       state: touch  # Ensure the file is created
-     when: ansible_distribution =="Centos"  # Condition to check if the OS is CentOS
+       state: touch
+     when: ansible_distribution == "CentOS"
 ```
-### 9. 'disk_space_checker.yml
-# This playbook demonstrates how to execute the `du -h` command to display disk usage and register the output.
+
+### **9. Disk Space Checker**
+
+**File: `disk_space_checker.yml`**
 
 ```yaml
+# This playbook demonstrates how to execute the `du -h` command to display disk usage and register the output.
 - hosts: localhost  # Target the localhost for this playbook
   tasks:
     - name: Execute du -h command  # Run the 'du -h' command to display disk usage in a human-readable format
@@ -445,7 +288,7 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
         var: du_output  # Show the content of the 'du_output' variable
 ```
 
-### Explanation of the Playbook
+### **Explanation of the Playbook**
 
 1. **`- hosts: localhost`**: The playbook targets the `localhost` for execution.
 
@@ -462,7 +305,7 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
    - **Module**: `debug`
    - **Variable**: `du_output` contains the command’s output, which is displayed.
 
-### Additional Comments
+### **Additional Comments**
 
 If you want to adjust the playbook to perform different actions or include more advanced features, you can explore the following options:
 
@@ -487,6 +330,8 @@ If you want to adjust the playbook to perform different actions or include more 
 
   ```yaml
   - name: Execute du -h command on multiple directories
+
+
     shell: "du -h {{ item }}"
     with_items:
       - /tmp
@@ -497,11 +342,10 @@ If you want to adjust the playbook to perform different actions or include more 
 
 Feel free to adapt these suggestions to fit your needs. Here's a more detailed playbook with these advanced features:
 
-### Advanced Example: `9_labexcercise_du_command_advanced.yml`
+### **Advanced Example: `9_labexcercise_du_command_advanced.yml`**
 
 ```yaml
 # This playbook demonstrates advanced features like conditionals, loops, and different modules.
-
 - hosts: localhost  # Target the localhost for this playbook
   gather_facts: True  # Gather system facts
 
@@ -540,4 +384,39 @@ This advanced playbook includes:
 
 You can choose between the basic and advanced examples depending on your requirements.
 
+---
 
+## **Connecting Ansible to Jenkins and Testing Build**
+
+### **Step 1: Configure Jenkins Job**
+
+1. **Install Ansible Plugin**:
+    - Go to Jenkins Dashboard -> Manage Jenkins -> Manage Plugins.
+    - Search for "Ansible" in the Available tab and install it.
+
+2. **Create a New Job**:
+    - Go to Jenkins Dashboard -> New Item.
+    - Enter an item name and select "Freestyle project", then click OK.
+
+3. **Configure Job**:
+    - In the job configuration page, scroll down to the "Build" section.
+    - Click on "Add build step" and select "Invoke Ansible Playbook".
+    - Configure the Ansible Playbook settings:
+        - **Playbook Path**: Specify the path to your Ansible playbook file (e.g., `disk_space_checker.yml`).
+        - **Inventory**: Specify the path to your inventory file or use `localhost` for local execution.
+
+4. **Save and Run Job**:
+    - Save the job configuration.
+    - Go back to the job's main page and click "Build Now" to run the job.
+
+### **Step 2: Test Build**
+
+1. **Check Build Status**:
+    - Go to the job's main page and check the build status in the Build History.
+    - Click on the build number to see the build details and console output.
+
+2. **Verify Ansible Output**:
+    - Check the console output to verify that the Ansible playbook ran successfully.
+    - Ensure that the output of the `du -h` command or any other task results are displayed as expected.
+
+By following these steps, you will have successfully connected Ansible to Jenkins and tested the build to verify that your playbooks execute correctly within the CI/CD pipeline.
