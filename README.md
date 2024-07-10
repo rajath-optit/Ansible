@@ -284,7 +284,7 @@ This guide should help you get started with Ansible on Ubuntu. You can adapt the
 - **[Ansible Tutorial for Beginners](https://www.redhat.com/en/topics/ansible/learn)**: A great starting point for new users.
 - **[Ansible Best Practices](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html)**: Best practices for writing and organizing your Ansible playbooks.
 
-# [ansiblelabs]
+# [Labs]
 
 ### 1. `1_labexercise_variables.yml`
 
